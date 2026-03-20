@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  landing-page:
+    build: ./landing
+    container_name: proxy-landing-nginx
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - default
+      - streaming_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.proxy-landing.rule=Host(`${DOMAIN_NAME_CLEAN}`)"
+      - "traefik.http.routers.proxy-landing.entrypoints=websecure"
+      - "traefik.http.routers.proxy-landing.tls=true"
+      - "traefik.http.routers.proxy-landing.tls.certresolver=letsencrypt"
+      - "traefik.http.services.proxy-landing.loadbalancer.server.port=80"
+      - "traefik.docker.network=streaming_streaming_network"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  proxy-gateway:
+    build: .
+    container_name: proxy-gateway-node
+    restart: always
+    env_file:
+      - .env
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  streaming_network:
+    external: true
+    name: streaming_streaming_network
